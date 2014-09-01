@@ -23,6 +23,7 @@ int main(int argc, char *argv[])
 
     int i;
     int res;
+    char strlist[17];
     char str[17];
     unsigned char tmp;
 
@@ -48,6 +49,22 @@ int main(int argc, char *argv[])
     // If you don't use either DMX output or DMX input you can set the corresponding pointer to zero.
     // (In this example simply the first interface of the list returned from "GetAllConnectedInterfaces" is opened without testing if there is connected any interface to the PC)
 
+    printf("All found devises: \n");
+    
+    for (int i = 0; i < 32; i++) {
+        strlist[16] = 0;
+        
+        memcpy(strlist, InterfaceList[i], 16);
+        
+        if (strcmp(strlist, "0000000000000000") == 0) {
+            break;
+        }
+        
+        printf("SERIAL: %s\n", strlist);
+    }
+    
+    printf("Devise used for tests: \n");
+    
     // Now let's copy over the first SERIAL-Number to a null-terminated string
     str[16] = 0;
     memcpy(str, InterfaceList[0], 16);
