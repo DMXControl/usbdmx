@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
             break;
         }
         
-        printf("SERIAL: %s\n", strlist);
+        printf("SERIAL (Version): %s (%x)\n", strlist, GetDeviceVersion(InterfaceList[i]));
     }
     
     printf("Devise used for tests: \n");
@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
     memcpy(str, InterfaceList[0], 16);
     
     printf("SERIAL: %s\n", str);
-    printf("VERSION: %d\n", GetDeviceVersion(InterfaceList[0]));
+    printf("VERSION: %x\n", GetDeviceVersion(InterfaceList[0]));
 
     memset(DMX_In, 0, sizeof(TDMXArray));
     memset(DMX_Out, 0, sizeof(TDMXArray));
