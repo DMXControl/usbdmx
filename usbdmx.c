@@ -56,11 +56,15 @@ typedef struct  {
     volatile unsigned char old_mode;
 } device_t;
 
-
+// Digital Enlightenment USB-DMX Interface
 #define DMX_INTERFACE_VENDOR_ID 0x4B4
 #define DMX_INTERFACE_PRODUCT_ID 0xF1F
+// FX5 DMX Interface
 #define DMX_INTERFACE_VENDOR_ID_2 0x16C0
 #define DMX_INTERFACE_PRODUCT_ID_2 0x88B
+// DMXControl Projects e.V. Noodle U1
+#define DMX_INTERFACE_VENDOR_ID_3 0x16D0
+#define DMX_INTERFACE_PRODUCT_ID_3 0x0830
 
 
 void wserial_to_serial(const wchar_t * s1, char * s2) {
@@ -117,7 +121,8 @@ USB_DMX_DLL void GetAllConnectedInterfaces(TSERIALLIST* SerialList) {
     while (cur_dev) {
         if(
             ((cur_dev->vendor_id == DMX_INTERFACE_VENDOR_ID)&&(cur_dev->product_id == DMX_INTERFACE_PRODUCT_ID)) ||
-            ((cur_dev->vendor_id == DMX_INTERFACE_VENDOR_ID_2)&&(cur_dev->product_id == DMX_INTERFACE_PRODUCT_ID_2))
+            ((cur_dev->vendor_id == DMX_INTERFACE_VENDOR_ID_2)&&(cur_dev->product_id == DMX_INTERFACE_PRODUCT_ID_2)) ||
+            ((cur_dev->vendor_id == DMX_INTERFACE_VENDOR_ID_3)&&(cur_dev->product_id == DMX_INTERFACE_PRODUCT_ID_3))
         ) {
             wserial_to_serial(cur_dev->serial_number, SerialList[0][pos]);
             pos ++;
@@ -140,7 +145,8 @@ USB_DMX_DLL DWORD GetDeviceVersion(TSERIAL Serial) {
     while (cur_dev) {
         if(
             ((cur_dev->vendor_id == DMX_INTERFACE_VENDOR_ID)&&(cur_dev->product_id == DMX_INTERFACE_PRODUCT_ID)) ||
-            ((cur_dev->vendor_id == DMX_INTERFACE_VENDOR_ID_2)&&(cur_dev->product_id == DMX_INTERFACE_PRODUCT_ID_2))
+            ((cur_dev->vendor_id == DMX_INTERFACE_VENDOR_ID_2)&&(cur_dev->product_id == DMX_INTERFACE_PRODUCT_ID_2)) ||
+            ((cur_dev->vendor_id == DMX_INTERFACE_VENDOR_ID_3)&&(cur_dev->product_id == DMX_INTERFACE_PRODUCT_ID_3))
         ) {
             wserial_to_serial(cur_dev->serial_number, serial_test);
             if(memcmp(Serial,serial_test,16)==0) {
@@ -269,6 +275,9 @@ USB_DMX_DLL DWORD OpenLink(TSERIAL Serial, TDMXArray *DMXOutArray, TDMXArray *DM
     handle = hid_open(DMX_INTERFACE_VENDOR_ID, DMX_INTERFACE_PRODUCT_ID, wserial);
     if(!handle) {
         handle = hid_open(DMX_INTERFACE_VENDOR_ID_2, DMX_INTERFACE_PRODUCT_ID_2, wserial);
+    }
+    if(!handle) {
+        handle = hid_open(DMX_INTERFACE_VENDOR_ID_3, DMX_INTERFACE_PRODUCT_ID_3, wserial);
     }
     if (!handle) {
         return 0;
