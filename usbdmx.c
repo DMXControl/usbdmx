@@ -56,15 +56,10 @@ typedef struct  {
     volatile unsigned char old_mode;
 } device_t;
 
-// Digital Enlightenment USB-DMX Interface
-#define DMX_INTERFACE_VENDOR_ID 0x4B4
-#define DMX_INTERFACE_PRODUCT_ID 0xF1F
-// FX5 DMX Interface
-#define DMX_INTERFACE_VENDOR_ID_2 0x16C0
-#define DMX_INTERFACE_PRODUCT_ID_2 0x88B
+
 // DMXControl Projects e.V. Noodle U1
-#define DMX_INTERFACE_VENDOR_ID_3 0x16D0
-#define DMX_INTERFACE_PRODUCT_ID_3 0x0830
+#define DMX_INTERFACE_VENDOR_ID 0x16D0
+#define DMX_INTERFACE_PRODUCT_ID 0x0830
 
 
 void wserial_to_serial(const wchar_t * s1, char * s2) {
@@ -73,6 +68,7 @@ void wserial_to_serial(const wchar_t * s1, char * s2) {
         s2[i] = s1[i];
     }
 }
+
 void wserial_from_serial(wchar_t * s1, const char * s2) {
     int i;
     for(i=0;i<16;i++) {
@@ -99,13 +95,16 @@ device_t open_devices[MAX_OPENED];
 
 int find_dev(TSERIAL serial) {
     int i;
+    
     for(i=0; i<MAX_OPENED; i++) {
         if(memcmp(serial, open_devices[i].serial, 16) == 0) {
             return i;
         }
     }
+    
     return -1;
 }
+
 void set_dev(int pos, char * serial) {
     memcpy(open_devices[pos].serial, serial, 16);
 }
@@ -119,11 +118,7 @@ USB_DMX_DLL void GetAllConnectedInterfaces(TSERIALLIST* SerialList) {
     cur_dev = devs;
 
     while (cur_dev) {
-        if(
-            ((cur_dev->vendor_id == DMX_INTERFACE_VENDOR_ID)&&(cur_dev->product_id == DMX_INTERFACE_PRODUCT_ID)) ||
-            ((cur_dev->vendor_id == DMX_INTERFACE_VENDOR_ID_2)&&(cur_dev->product_id == DMX_INTERFACE_PRODUCT_ID_2)) ||
-            ((cur_dev->vendor_id == DMX_INTERFACE_VENDOR_ID_3)&&(cur_dev->product_id == DMX_INTERFACE_PRODUCT_ID_3))
-        ) {
+        if( ((cur_dev->vendor_id == DMX_INTERFACE_VENDOR_ID)&&(cur_dev->product_id == DMX_INTERFACE_PRODUCT_ID)) ) {
             wserial_to_serial(cur_dev->serial_number, SerialList[0][pos]);
             pos ++;
         }
@@ -143,11 +138,7 @@ USB_DMX_DLL DWORD GetDeviceVersion(TSERIAL Serial) {
     cur_dev = devs;
 
     while (cur_dev) {
-        if(
-            ((cur_dev->vendor_id == DMX_INTERFACE_VENDOR_ID)&&(cur_dev->product_id == DMX_INTERFACE_PRODUCT_ID)) ||
-            ((cur_dev->vendor_id == DMX_INTERFACE_VENDOR_ID_2)&&(cur_dev->product_id == DMX_INTERFACE_PRODUCT_ID_2)) ||
-            ((cur_dev->vendor_id == DMX_INTERFACE_VENDOR_ID_3)&&(cur_dev->product_id == DMX_INTERFACE_PRODUCT_ID_3))
-        ) {
+        if( ((cur_dev->vendor_id == DMX_INTERFACE_VENDOR_ID)&&(cur_dev->product_id == DMX_INTERFACE_PRODUCT_ID)) ) {
             wserial_to_serial(cur_dev->serial_number, serial_test);
             if(memcmp(Serial,serial_test,16)==0) {
                 res = cur_dev->release_number;
@@ -166,6 +157,7 @@ USB_DMX_DLL void GetAllOpenedInterfaces(TSERIALLIST* SerialList) {
     int i;
     pos = 0;
     memset(SerialList, '0', sizeof(TSERIALLIST));
+    
     for(i=0; i<MAX_OPENED; i++) {
         if(memcmp(open_devices[i].serial,NO_DEV,16)!=0) {
             memcpy(SerialList[0][pos], open_devices[i].serial, 16);
@@ -179,13 +171,17 @@ USB_DMX_DLL DWORD SetInterfaceMode (TSERIAL Serial, unsigned char Mode) {
     int pos;
 
     pos = find_dev(Serial);
+    
     if (pos == -1) {
         return 0;
     }
+    
     open_devices[pos].mode = Mode;
+    
     while(open_devices[pos].mode != open_devices[pos].old_mode) {
         usleep(10000);
     }
+    
     return 1;
 }
 
@@ -203,16 +199,19 @@ void *read_write_thread(void *pointer)
     THOSTINPUTCHANGEPROCBLOCK * tmp2;
 
     while(device->status != THREAD_STATUS_STOP) {
+        
         if (device->status == THREAD_STATUS_PAUSE) {
             device->status = THREAD_STATUS_PAUSED;
             while(device->status == THREAD_STATUS_PAUSED) {
                 usleep(10000);
             }
         }
+        
         if(device->old_mode != device->mode) {
             device->old_mode = device->mode;
             set_mode(device->handle, device->old_mode);
         }
+        
         if(device->dmx_out) {
             for(i=0; i<16; i++) {
                 if(first_time || (memcmp(device->dmx_cmp + (i * 32), (* device->dmx_out) + (i * 32), 32) != 0)) {
@@ -224,6 +223,7 @@ void *read_write_thread(void *pointer)
                 }
             }
         }
+        
         if(device->dmx_in) {
             changed = 0;
             while(1) {
@@ -264,6 +264,7 @@ USB_DMX_DLL DWORD OpenLink(TSERIAL Serial, TDMXArray *DMXOutArray, TDMXArray *DM
     wserial_from_serial(wserial, Serial);
 
     pos = find_dev(Serial);
+    
     if(pos != -1) {
         return 1;
     }
@@ -273,15 +274,11 @@ USB_DMX_DLL DWORD OpenLink(TSERIAL Serial, TDMXArray *DMXOutArray, TDMXArray *DM
         return 0;
     }
     handle = hid_open(DMX_INTERFACE_VENDOR_ID, DMX_INTERFACE_PRODUCT_ID, wserial);
-    if(!handle) {
-        handle = hid_open(DMX_INTERFACE_VENDOR_ID_2, DMX_INTERFACE_PRODUCT_ID_2, wserial);
-    }
-    if(!handle) {
-        handle = hid_open(DMX_INTERFACE_VENDOR_ID_3, DMX_INTERFACE_PRODUCT_ID_3, wserial);
-    }
+    
     if (!handle) {
         return 0;
     }
+    
     hid_set_nonblocking(handle, 1);
 
     memset(&open_devices[pos], 0, sizeof(device_t));
@@ -293,6 +290,7 @@ USB_DMX_DLL DWORD OpenLink(TSERIAL Serial, TDMXArray *DMXOutArray, TDMXArray *DM
     set_mode(handle, 0);
 
     pthread_create(&open_devices[pos].thread, NULL, read_write_thread, &open_devices[pos]);
+    
     return 1;
 }
 
@@ -303,18 +301,24 @@ USB_DMX_DLL DWORD CloseLink (TSERIAL Serial) {
     if(pos == -1) {
         return 0;
     }
+    
     open_devices[pos].status = THREAD_STATUS_STOP;
+    
     while(open_devices[pos].status != THREAD_STATUS_STOPPED) {
         usleep(10000);
     }
+    
     hid_close(open_devices[pos].handle);
+    
     set_dev(pos, NO_DEV);
+    
     return 1;
 }
 
 USB_DMX_DLL DWORD CloseAllLinks (void) {
     int i;
     int result = 1;
+    
     for(i=0; i<MAX_OPENED; i++) {
         if(memcmp(open_devices[i].serial, NO_DEV, 16) != 0) {
             if(0 == CloseLink(open_devices[i].serial)) {
@@ -357,7 +361,9 @@ USB_DMX_DLL DWORD SetInterfaceAdvTxConfig(
         return 0;
     }
 
-    if (Channelcount > 512) Channelcount = 512;
+    if (Channelcount > 512) {
+        Channelcount = 512;
+    }
 
     open_devices[pos].status = THREAD_STATUS_PAUSE;
 
@@ -387,6 +393,7 @@ USB_DMX_DLL DWORD SetInterfaceAdvTxConfig(
 
     return 1;
 }
+
 USB_DMX_DLL DWORD StoreInterfaceAdvTxConfig(TSERIAL Serial) {
     int pos;
     unsigned char buffer[35];
@@ -413,10 +420,12 @@ USB_DMX_DLL DWORD StoreInterfaceAdvTxConfig(TSERIAL Serial) {
 
     return 1;
 }
+
 USB_DMX_DLL DWORD RegisterInputChangeBlockNotification(THOSTINPUTCHANGEPROCBLOCK Proc) {
     callback_func_block = Proc;
     return 1;
 }
+
 USB_DMX_DLL DWORD UnregisterInputChangeBlockNotification(void) {
     callback_func_block = NULL;
     return 1;
@@ -438,6 +447,7 @@ USB_DMX_DLL DWORD OpenInterface(TDMXArray *DMXOutArray, TDMXArray *DMXInArray, u
     if(memcmp(InterfaceList[0],"0000000000000000",16) == 0) {
         return 0;
     }
+    
     if(0 == OpenLink(InterfaceList[0], DMXOutArray, DMXInArray)) {
         return 0;
     }
@@ -445,6 +455,7 @@ USB_DMX_DLL DWORD OpenInterface(TDMXArray *DMXOutArray, TDMXArray *DMXInArray, u
     if(0 == SetInterfaceMode(InterfaceList[0], Mode)) {
         return 0;
     }
+    
     return 1;
 }
 

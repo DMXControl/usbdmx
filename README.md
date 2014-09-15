@@ -1,4 +1,4 @@
-usbdmx - Linux/Mac/Windows-Driver for [FX5 USB DMX Interface](http://www.fx5.de/), [Digital Enlightenment](http://www.digital-enlightenment.de) and [DMXControl Projects e.V. Noodle U1](http://www.dmxcontrol-projects.org/hardware/nodle-u1.html) .
+usbdmx - Linux/Mac/Windows-Driver for [DMXControl Projects e.V. Noodle U1](http://www.dmxcontrol-projects.org/hardware/nodle-u1.html) .
 
 BSD-License. API compatible with
 original Windows-Drivers usbdmx.dll and (!) usbdmxsi.dll
